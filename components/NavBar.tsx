@@ -9,7 +9,7 @@ export default function NavBar() {
     <>
       <div className="flex flex-row justify-between items-center w-[1000px] m-auto p-6">
         <div className="flex flex-row items-center gap-4">
-          <Link href="https://app.heygen.com/" target="_blank">
+          <Link href="https://sunedu.id/" target="_blank">
             <SuneduLogo />
           </Link>
           <div className="bg-gradient-to-br from-sky-300 to-indigo-500 bg-clip-text">
@@ -20,31 +20,22 @@ export default function NavBar() {
         </div>
         <div className="flex flex-row items-center gap-6">
           <Link
-            href="https://docs.heygen.com/reference/list-voices-v2"
+            href="https://sunedu.id/services/learning-management-system/"
             target="_blank"
           >
-            Voices
+            Learning Management System
           </Link>
           <Link
-            href="https://docs.heygen.com/reference/new-session-copy"
+            href="https://sunedu.id/services/microlearning-content/"
             target="_blank"
           >
-            API Docs
+            Microlearning
           </Link>
           <Link
-            href="https://help.heygen.com/en/articles/9182113-interactive-avatar-101-your-ultimate-guide"
+            href="https://sunedu.id/services/blended-training/"
             target="_blank"
           >
-            Guide
-          </Link>
-          <Link
-            aria-label="Github"
-            className="flex flex-row justify-center gap-1 text-foreground"
-            href="https://github.com/HeyGen-Official/StreamingAvatarSDK"
-            target="_blank"
-          >
-            <GithubIcon className="text-default-500" />
-            SDK
+            Employee Training
           </Link>
         </div>
       </div>

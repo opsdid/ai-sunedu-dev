@@ -39,7 +39,7 @@ export default function NavBar() {
             Employee Training
           </Link>
           <button
-              onClick={() => signOut({ callbackUrl: '/' })}
+              onClick={() => signOut({ callbackUrl: 'https://ai.sunedu.id/' })}
               className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
             >
               Sign Out

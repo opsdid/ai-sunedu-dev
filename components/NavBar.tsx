@@ -20,12 +20,6 @@ export default function NavBar() {
         </div>
         <div className="flex flex-row items-center gap-6">
           <Link
-            href="https://labs.heygen.com/interactive-avatar"
-            target="_blank"
-          >
-            Avatars
-          </Link>
-          <Link
             href="https://docs.heygen.com/reference/list-voices-v2"
             target="_blank"
           >

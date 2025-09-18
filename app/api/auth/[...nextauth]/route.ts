@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
-import { db } from "@/lib/db"; // Make sure this path is correct for your structure
+import db from "@/lib/db"; // Make sure this path is correct for your structure
 
 const handler = NextAuth({
   session: {

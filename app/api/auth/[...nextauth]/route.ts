@@ -1,7 +1,17 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
-import db from "@/lib/db"; // Make sure this path is correct for your structure
+import db from "@/lib/db";
+import { RowDataPacket } from "mysql2";
+
+// Define a type for the user object retrieved from the database
+interface DbUser extends RowDataPacket {
+  id: number;
+  username: string;
+  password: string;
+  name: string;
+  email: string;
+}
 
 const handler = NextAuth({
   session: {
@@ -24,16 +34,16 @@ const handler = NextAuth({
         }
 
         try {
-          const user = await db.query(
+          const [rows] = await db.query<DbUser[]>(
             "SELECT * FROM users WHERE username = ?",
             [credentials.username]
           );
 
-          console.log("User found in DB:", user[0] || "No user found");
+          console.log("User found in DB:", rows[0] || "No user found");
 
-          // Check if a user was found and has a password
-          if (user.length > 0 && user[0].password) {
-            const currentUser = user[0];
+          // Check if a user was found in the database
+          if (rows.length > 0) {
+            const currentUser = rows[0];
 
             // Compare the provided password with the hashed password from the database
             const passwordsMatch = await compare(

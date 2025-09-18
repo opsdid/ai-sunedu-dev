@@ -1,23 +1,9 @@
-/*"use client";
-
-import InteractiveAvatar from "@/components/InteractiveAvatar";
-export default function App() {
-  return (
-    <div className="w-screen h-screen flex flex-col">
-      <div className="w-[900px] flex flex-col items-start justify-start gap-5 mx-auto pt-4 pb-20">
-        <div className="w-full">
-          <InteractiveAvatar />
-        </div>
-      </div>
-    </div>
-  );
-}*/
-
 'use client';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { useState } from 'react';
 import InteractiveAvatar from "@/components/InteractiveAvatar";
+import Link from 'next/link';
 
 // A simple login form component
 function LoginForm() {
@@ -73,6 +59,12 @@ function LoginForm() {
         <button type="submit">Login</button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
+       <p style={{ marginTop: '20px' }}>
+        Don't have an account?{' '}
+        <Link href="/register" style={{ color: '#0070f3', textDecoration: 'underline' }}>
+          Register here
+        </Link>
+      </p>
     </div>
   );
 }

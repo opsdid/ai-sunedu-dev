@@ -63,6 +63,14 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
           }
           options={[...AVATARS, "CUSTOM"]}
           placeholder="Select Avatar"
+          renderOption={(option) => {
+            return typeof option === "string"
+              ? "Custom Avatar ID"
+              : option.name;
+          }}
+          value={
+            selectedAvatar?.isCustom ? "Custom Avatar ID" : selectedAvatar?.name
+          }
           onSelect={(option) => {
             if (typeof option === "string") {
               onChange("avatarName", "");

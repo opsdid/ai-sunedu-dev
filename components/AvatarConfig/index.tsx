@@ -56,29 +56,12 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
     <div className="relative flex flex-col gap-4 w-[550px] py-8 max-h-full overflow-y-auto px-4">
       <Field label="Avatar ID">
         <Select
-          isSelected={(option) =>
-            typeof option === "string"
-              ? !!selectedAvatar?.isCustom
-              : option.avatar_id === selectedAvatar?.avatarId
-          }
-          options={[...AVATARS, "CUSTOM"]}
-          options={[...AVATARS]}
+          isSelected={(option) => option.avatar_id === selectedAvatar?.avatarId}
+          options={AVATARS}
           placeholder="Select Avatar"
-          renderOption={(option) => {
-            return typeof option === "string"
-              ? "Custom Avatar ID"
-              : option.name;
-          }}
-          value={
-            selectedAvatar?.isCustom ? "Custom Avatar ID" : selectedAvatar?.name
-          }
-          onSelect={(option) => {
-            if (typeof option === "string") {
-              onChange("avatarName", "");
-            } else {
-              onChange("avatarName", option.avatar_id);
-            }
-          }}
+          renderOption={(option) => option.name}
+          value={selectedAvatar?.name}
+          onSelect={(option) => onChange("avatarName", option.avatar_id)}
         />
       </Field>
       <Field label="Language">

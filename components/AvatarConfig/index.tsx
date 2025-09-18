@@ -53,14 +53,6 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
   }, [config.avatarName]);
 
   return (
-    <div className="relative flex flex-col gap-4 w-[550px] py-8 max-h-full overflow-y-auto px-4">
-      <Field label="Custom Knowledge Base ID">
-        <Input
-          placeholder="Enter custom knowledge base ID"
-          value={config.knowledgeId}
-          onChange={(value) => onChange("knowledgeId", value)}
-        />
-      </Field>
       <Field label="Avatar ID">
         <Select
           isSelected={(option) =>
@@ -70,14 +62,6 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
           }
           options={[...AVATARS, "CUSTOM"]}
           placeholder="Select Avatar"
-          renderOption={(option) => {
-            return typeof option === "string"
-              ? "Custom Avatar ID"
-              : option.name;
-          }}
-          value={
-            selectedAvatar?.isCustom ? "Custom Avatar ID" : selectedAvatar?.name
-          }
           onSelect={(option) => {
             if (typeof option === "string") {
               onChange("avatarName", "");

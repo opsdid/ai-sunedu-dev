@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function RegisterPage() {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [username, setUsername] = useState('');
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,7 +19,7 @@ export default function RegisterPage() {
     setError('');
     setSuccess('');
 
-    if (!username || !password || !name || !email) {
+    if (!firstName || !lastName || !username || !password || !email) {
       setError('All fields are required.');
       return;
     }
@@ -30,9 +31,10 @@ export default function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          firstName,
+          lastName,
           username,
           password,
-          name,
           email,
         }),
       });
@@ -59,19 +61,29 @@ export default function RegisterPage() {
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
       <h1>Register New User</h1>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '300px', padding: '20px', backgroundColor: '#222', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input
+            type="text"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="First Name"
+            required
+            style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none', width: '50%' }}
+          />
+          <input
+            type="text"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            placeholder="Last Name"
+            required
+            style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none', width: '50%' }}
+          />
+        </div>
         <input
           type="text"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           placeholder="Username"
-          required
-          style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }}
-        />
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="Full Name"
           required
           style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }}
         />

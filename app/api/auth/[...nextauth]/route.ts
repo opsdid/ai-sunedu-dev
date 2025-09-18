@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import pool from "@/lib/db"; // Import the database connection pool
-import bcrypt from "bcrypt"; // Import bcrypt for password hashing
+import { compare } from "bcrypt";
+import { db } from "@/lib/db"; // Make sure this path is correct for your structure
 
 const handler = NextAuth({
   session: {
@@ -15,65 +15,58 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
+        console.log("--- Authorize function started ---");
+        console.log("Credentials received:", credentials);
+
         if (!credentials?.username || !credentials?.password) {
+          console.log("Missing username or password");
           return null;
         }
 
-        let dbConnection;
         try {
-          // Get a connection from the pool
-          dbConnection = await pool.getConnection();
-
-          // Find the user with the matching username
-          const [rows] = await dbConnection.execute(
-            'SELECT id, username, password, name, email FROM users WHERE username = ?',
+          const user = await db.query(
+            "SELECT * FROM users WHERE username = ?",
             [credentials.username]
           );
 
-          // The result of a SELECT query is an array of rows.
-          // We need to cast it to the expected type.
-          const users = rows as any[];
+          console.log("User found in DB:", user[0] || "No user found");
 
-          if (users.length === 0) {
-            console.log('No user found with that username.');
-            return null; // No user found
-          }
+          // Check if a user was found and has a password
+          if (user.length > 0 && user[0].password) {
+            const currentUser = user[0];
 
-          const user = users[0];
+            // Compare the provided password with the hashed password from the database
+            const passwordsMatch = await compare(
+              credentials.password,
+              currentUser.password
+            );
+            
+            console.log("Password match result:", passwordsMatch);
 
-          // Use bcrypt to compare the provided password with the stored hash
-          const passwordMatch = await bcrypt.compare(credentials.password, user.password);
-
-          if (passwordMatch) {
-            // Passwords match. Return the user object without the password hash.
-            return {
-              id: user.id.toString(),
-              name: user.name,
-              email: user.email,
-              username: user.username
-            };
+            if (passwordsMatch) {
+              console.log("Authentication successful. Returning user.");
+              // Omit the password from the returned object for security
+              return {
+                id: currentUser.id.toString(),
+                username: currentUser.username,
+                name: currentUser.name,
+                email: currentUser.email,
+              };
+            } else {
+              console.log("Passwords do not match.");
+              return null;
+            }
           } else {
-            // Passwords do not match
-            console.log('Invalid password.');
+            console.log("User not found with that username.");
             return null;
           }
         } catch (error) {
-          console.error('Database error during authorization:', error);
-          return null; // Return null on any database error
-        } finally {
-          // ALWAYS release the connection back to the pool
-          if (dbConnection) {
-            dbConnection.release();
-          }
+          console.error("Error during database query or password comparison:", error);
+          return null;
         }
       },
     }),
   ],
-  pages: {
-    signIn: '/',
-    error: '/',
-  },
-  // Add callbacks to include custom user properties in the session JWT
   callbacks: {
     async jwt({ token, user }) {
       // The `user` object is only available on the first sign-in

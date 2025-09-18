@@ -58,19 +58,20 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
         <Select
           isSelected={(option) =>
             typeof option === "string"
-              ? !!selectedAvatar?.isCustom
+              //? !!selectedAvatar?.isCustom
               : option.avatar_id === selectedAvatar?.avatarId
           }
-          options={[...AVATARS, "CUSTOM"]}
+          //options={[...AVATARS, "CUSTOM"]}
+          options={[...AVATARS]}
           placeholder="Select Avatar"
-          renderOption={(option) => {
+          /*renderOption={(option) => {
             return typeof option === "string"
               ? "Custom Avatar ID"
               : option.name;
           }}
           value={
             selectedAvatar?.isCustom ? "Custom Avatar ID" : selectedAvatar?.name
-          }
+          }*/
           onSelect={(option) => {
             if (typeof option === "string") {
               onChange("avatarName", "");
@@ -81,13 +82,13 @@ export const AvatarConfig: React.FC<AvatarConfigProps> = ({
         />
       </Field>
       {selectedAvatar?.isCustom && (
-        <Field label="Custom Avatar ID">
+        /*<Field label="Custom Avatar ID">
           <Input
             placeholder="Enter custom avatar ID"
             value={config.avatarName}
             onChange={(value) => onChange("avatarName", value)}
           />
-        </Field>
+        </Field>*/
       )}
       <Field label="Language">
         <Select

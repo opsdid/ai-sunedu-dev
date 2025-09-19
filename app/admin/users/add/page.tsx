@@ -1,125 +1,93 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstname: string;
-  lastname: string;
-  rolename: string;
-}
-
-export default function ViewUsersPage() {
-  const { data: session, status } = useSession();
+export default function AddUserPage() {
+  const [username, setUsername] = useState('');
+  const [firstname, setFirstname] = useState('');
+  const [lastname, setLastname] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [roleid, setRoleid] = useState('2'); // Default to 'user' role
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-    } else if (status === 'authenticated' && (session.user as any)?.role !== 'admin') {
-      router.push('/');
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    try {
+      // Note: This API route should be secured to only allow admins
+      const res = await fetch('/api/admin/create-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          username, 
+          firstname, 
+          lastname, 
+          email, 
+          password, 
+          roleid: parseInt(roleid) 
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || 'Failed to create user.');
+        return;
+      }
+
+      setSuccess('User created successfully! Redirecting to user list...');
+      setTimeout(() => {
+        router.push('/admin/users');
+      }, 2000);
+
+    } catch (err) {
+      setError('An unexpected error occurred.');
     }
-
-    if (status === 'authenticated' && (session.user as any)?.role === 'admin') {
-      const fetchUsers = async () => {
-        try {
-          const res = await fetch('/api/users');
-          if (!res.ok) {
-            throw new Error('Failed to fetch users. You may not have permission.');
-          }
-          const data = await res.json();
-          setUsers(data);
-        } catch (err: any) {
-          setError(err.message);
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchUsers();
-    }
-  }, [session, status, router]);
-
-  if (status === 'loading' || loading) {
-    return <p className="text-center mt-10">Loading...</p>;
-  }
-
-  if (error) {
-    return <p className="text-center mt-10 text-red-500">Error: {error}</p>;
-  }
-
-  if ((session?.user as any)?.role !== 'admin') {
-     return <p className="text-center mt-10">Access Denied</p>;
-  }
+  };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
-        <Link 
-          href="/admin/users/add" 
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
-        >
-          + Add New User
-        </Link>
-      </div>
-      <div className="overflow-x-auto bg-gray-800 shadow-md rounded-lg">
-        <table className="min-w-full leading-normal">
-          <thead>
-            <tr>
-              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                Username
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                Full Name
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
-                Role
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-700">
-                <td className="px-5 py-5 border-b border-gray-700 text-sm">
-                  <p className="text-gray-100 whitespace-no-wrap">{user.id}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-700 text-sm">
-                  <p className="text-gray-100 whitespace-no-wrap">{user.username}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-700 text-sm">
-                  <p className="text-gray-100 whitespace-no-wrap">{`${user.firstname} ${user.lastname}`}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-700 text-sm">
-                  <p className="text-gray-100 whitespace-no-wrap">{user.email}</p>
-                </td>
-                <td className="px-5 py-5 border-b border-gray-700 text-sm">
-                  <span
-                    className={`relative inline-block px-3 py-1 font-semibold leading-tight rounded-full ${
-                      user.rolename === 'admin' ? 'text-green-900 bg-green-200' : 'text-blue-900 bg-blue-200'
-                    }`}
-                  >
-                    <span aria-hidden className="absolute inset-0 opacity-50 rounded-full"></span>
-                    <span className="relative">{user.rolename}</span>
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', color: 'white', padding: '20px' }}>
+      <div style={{ width: '100%', maxWidth: '400px' }}>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-center">Add New User</h1>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', padding: '20px', backgroundColor: '#2d3748', borderRadius: '8px' }}>
+          
+          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username" required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }} />
+          
+          <input type="text" value={firstname} onChange={(e) => setFirstname(e.target.value)} placeholder="First Name" required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }} />
+          
+          <input type="text" value={lastname} onChange={(e) => setLastname(e.target.value)} placeholder="Last Name" required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }} />
+          
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }} />
+          
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none' }} />
+          
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-300 mb-1">Assign Role</label>
+            <select id="role" value={roleid} onChange={(e) => setRoleid(e.target.value)} required style={{ padding: '10px', color: 'black', borderRadius: '4px', border: 'none', width: '100%' }}>
+              <option value="2">User</option>
+              <option value="1">Admin</option>
+            </select>
+          </div>
+          
+          <button type="submit" style={{ padding: '10px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+            Create User
+          </button>
+
+          {error && <p style={{ color: '#ef4444', textAlign: 'center', margin: 0 }}>{error}</p>}
+          {success && <p style={{ color: '#22c55e', textAlign: 'center', margin: 0 }}>{success}</p>}
+        </form>
+         <p style={{ marginTop: '20px', textAlign: 'center' }}>
+          <Link href="/admin/users" style={{ color: '#3b82f6', textDecoration: 'underline' }}>
+            &larr; Back to User List
+          </Link>
+        </p>
       </div>
     </div>
   );

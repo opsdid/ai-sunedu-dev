@@ -41,8 +41,8 @@ export async function POST(req: Request) {
     // Insert the new user into the database
     console.log("Inserting new user into database...");
     const result = await db.query(
-      "INSERT INTO users (username, email, password, firstname, lastname) VALUES (?, ?, ?, ?, ?)",
-      [username, email, hashedPassword, firstName, lastName]
+      "INSERT INTO users (username, email, password, firstname, lastname, roleid) VALUES (?, ?, ?, ?, ?, ?)",
+      [username, email, hashedPassword, firstName, lastName, 2]
     );
     console.log("Database insert result:", result);
 

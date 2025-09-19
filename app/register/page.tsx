@@ -60,7 +60,7 @@ export default function RegisterPage() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100vh', color: 'white' }}>
       <h1>Register New User</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '300px', padding: '20px', backgroundColor: '#222', borderRadius: '8px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '500px', padding: '20px', backgroundColor: '#222', borderRadius: '8px' }}>
         <div style={{ display: 'flex', gap: '10px' }}>
           <input
             type="text"

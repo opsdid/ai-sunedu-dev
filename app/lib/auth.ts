@@ -1,42 +1,90 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // Corrected import path
+import { AuthOptions } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
+import { compare } from "bcrypt";
 import db from "@/lib/db";
+import { RowDataPacket } from "mysql2";
 
-export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
+// Define an interface for the user data from the database
+interface DbUser extends RowDataPacket {
+  id: number;
+  username: string;
+  email: string;
+  password_hash: string;
+  firstname: string;
+  lastname: string;
+  rolename: string;
+}
 
-  if (!session) {
-    return new NextResponse(JSON.stringify({ message: "Unauthenticated" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
-  }
+export const authOptions: AuthOptions = {
+  session: {
+    strategy: "jwt",
+  },
+  providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.username || !credentials?.password) {
+          return null;
+        }
 
-  // Cast the user object to access custom properties
-  const userSession = session.user as { role?: string };
+        try {
+          const [rows] = await db.query<DbUser[]>(
+            `SELECT u.*, r.name as rolename 
+             FROM users u 
+             JOIN roles r ON u.roleid = r.id 
+             WHERE u.username = ?`,
+            [credentials.username]
+          );
 
-  if (userSession.role !== "admin") {
-    return new NextResponse(
-      JSON.stringify({ message: "Forbidden: Access is denied" }),
-      { status: 403, headers: { "Content-Type": "application/json" } }
-    );
-  }
+          if (rows.length > 0) {
+            const user = rows[0];
+            const passwordsMatch = await compare(
+              credentials.password,
+              user.password
+            );
 
-  try {
-    const [users] = await db.query(`
-      SELECT u.id, u.username, u.email, u.firstname, u.lastname, r.name as rolename
-      FROM users u
-      JOIN roles r ON u.roleid = r.id
-      ORDER BY u.id ASC
-    `);
-
-    return NextResponse.json(users);
-  } catch (error) {
-    console.error("Failed to fetch users:", error);
-    return new NextResponse(
-      JSON.stringify({ message: "Internal Server Error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
-  }
+            if (passwordsMatch) {
+              return {
+                id: user.id.toString(),
+                username: user.username,
+                email: user.email,
+                name: `${user.firstname} ${user.lastname}`,
+                role: user.rolename,
+              };
+            }
+          }
+          return null;
+        } catch (error) {
+          console.error("Authorize error:", error);
+          return null;
+        }
+      },
+    }),
+  ],
+  callbacks: {
+    jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+        token.username = (user as any).username;
+        token.role = (user as any).role;
+      }
+      return token;
+    },
+    session({ session, token }) {
+      if (session.user) {
+        (session.user as any).id = token.id;
+        (session.user as any).username = token.username;
+        (session.user as any).role = token.role;
+      }
+      return session;
+    },
+  },
+  pages: {
+    signIn: "/",
+    error: "/",
+  },
 }

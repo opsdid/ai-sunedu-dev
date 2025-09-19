@@ -19,12 +19,20 @@ export default function NavBar() {
             <SuneduLogo />
           </Link>
           <div className="bg-gradient-to-br from-sky-300 to-indigo-500 bg-clip-text">
+            <Link href="https://ai.sunedu.id/">
             <p className="text-xl font-semibold text-transparent">
               Sunedu.id
             </p>
+            </Link>
           </div>
         </div>
         <div className="flex flex-row items-center gap-6">
+          <Link
+            href="https://ai.sunedu.id/"
+            target="_blank"
+          >
+            Interactive AI
+          </Link>
           <Link
             href="https://sunedu.id/services/learning-management-system/"
             target="_blank"

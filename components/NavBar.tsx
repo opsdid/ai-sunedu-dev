@@ -13,7 +13,7 @@ export default function NavBar() {
 
   return (
     <>
-      <div className="flex flex-row justify-between items-center w-[1250px] m-auto p-6">
+      <div className="flex flex-row justify-between items-center w-[1450px] m-auto p-6">
         <div className="flex flex-row items-center gap-4">
           <Link href="https://sunedu.id/" target="_blank">
             <SuneduLogo />

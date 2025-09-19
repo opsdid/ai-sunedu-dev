@@ -1,51 +1,61 @@
-import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
-import bcrypt from 'bcrypt';
-
-// The number of salt rounds to use for hashing
-const saltRounds = 10;
+import { NextResponse } from "next/server";
+import { hash } from "bcrypt";
+import db from "@/lib/db";
 
 export async function POST(req: Request) {
-  let dbConnection;
+  console.log("--- Register API endpoint hit ---");
   try {
-    const { username, password, name, email } = await req.json();
+    const body = await req.json();
+    console.log("Request body received:", body);
+    const { firstName, lastName, username, email, password } = body;
 
-    // Basic validation
-    if (!username || !password || !email) {
-      return NextResponse.json({ message: 'Username, password, and email are required.' }, { status: 400 });
+    if (!username || !email || !password || !firstName || !lastName) {
+      console.log("Validation failed: Missing fields.");
+      return NextResponse.json(
+        { message: "All fields are required." },
+        { status: 400 }
+      );
     }
 
-    dbConnection = await pool.getConnection();
-
     // Check if user already exists
-    const [existingUsers] = await dbConnection.execute('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
-    if ((existingUsers as any[]).length > 0) {
-      return NextResponse.json({ message: 'Username or email already exists.' }, { status: 409 }); // 409 Conflict
+    console.log("Checking for existing user with username:", username, "or email:", email);
+    const [existingUser] = await db.query(
+      "SELECT * FROM users WHERE username = ? OR email = ?",
+      [username, email]
+    );
+
+    console.log("Existing user check result:", existingUser);
+    if (Array.isArray(existingUser) && existingUser.length > 0) {
+      console.log("User already exists.");
+      return NextResponse.json(
+        { message: "Username or email already exists." },
+        { status: 409 }
+      );
     }
 
     // Hash the password
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    console.log("Hashing password...");
+    const hashedPassword = await hash(password, 10);
+    console.log("Password hashed successfully.");
 
     // Insert the new user into the database
-    const [result] = await dbConnection.execute(
-      'INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)',
-      [username, hashedPassword, name, email]
+    console.log("Inserting new user into database...");
+    const result = await db.query(
+      "INSERT INTO users (username, email, password, firstname, lastname) VALUES (?, ?, ?, ?, ?)",
+      [username, email, hashedPassword, firstName, lastName]
     );
+    console.log("Database insert result:", result);
 
-    const insertResult = result as any;
-
-    if (insertResult.affectedRows === 1) {
-      return NextResponse.json({ message: 'User created successfully.', userId: insertResult.insertId }, { status: 201 });
-    } else {
-      throw new Error('User creation failed.');
-    }
-
+    console.log("User registration successful.");
+    return NextResponse.json(
+      { message: "User registered successfully." },
+      { status: 201 }
+    );
   } catch (error) {
-    console.error('Registration error:', error);
-    return NextResponse.json({ message: 'An error occurred during registration.' }, { status: 500 });
-  } finally {
-    if (dbConnection) {
-      dbConnection.release();
-    }
+    console.error("!!! REGISTRATION_ERROR !!!", error);
+    return NextResponse.json(
+      { message: "An unexpected error occurred." },
+      { status: 500 }
+    );
   }
 }

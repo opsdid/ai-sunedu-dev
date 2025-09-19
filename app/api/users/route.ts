@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/lib/auth"; // Corrected import path
+import { authOptions } from "@/lib/auth";
 import db from "@/lib/db";
 
 export async function GET(req: Request) {
@@ -13,7 +13,6 @@ export async function GET(req: Request) {
     });
   }
 
-  // Cast the user object to access custom properties
   const userSession = session.user as { role?: string };
 
   if (userSession.role !== "admin") {

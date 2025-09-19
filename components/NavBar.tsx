@@ -38,12 +38,25 @@ export default function NavBar() {
           >
             Employee Training
           </Link>
-          <button
-              onClick={() => signOut({ callbackUrl: 'https://ai.sunedu.id/' })}
-              className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
-            >
-              Sign Out
-            </button>
+          {status === 'authenticated' && (
+            <>
+              {isAdmin && (
+                <Link href="/admin/users" className="text-gray-300 hover:text-blue-400 transition-colors">
+                  User Management
+                </Link>
+              )}
+              <div className="w-px h-6 bg-gray-700"></div>
+              <span className="text-gray-400">
+                Welcome, {session.user?.name || 'User'}
+              </span>
+              <button
+                onClick={() => signOut({ callbackUrl: '/' })}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+              >
+                Sign Out
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

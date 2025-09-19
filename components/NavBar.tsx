@@ -1,11 +1,16 @@
-"use client";
+'use client';
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { GithubIcon, SuneduLogo } from "./Icons";
+import { SuneduLogo } from "./Icons"; // Assuming this file exists and exports SuneduLogo
 
 export default function NavBar() {
-  const { data: session } = useSession();
+  // Get both session data and the authentication status
+  const { data: session, status } = useSession();
+
+  // Check if the currently logged-in user is an admin
+  const isAdmin = (session?.user as any)?.role === 'admin';
+
   return (
     <>
       <div className="flex flex-row justify-between items-center w-[1000px] m-auto p-6">
@@ -38,20 +43,24 @@ export default function NavBar() {
           >
             Employee Training
           </Link>
+
+          {/* Only show the following content if the user is authenticated */}
           {status === 'authenticated' && (
             <>
+              {/* This link is only visible to admins */}
               {isAdmin && (
-                <Link href="/admin/users" className="text-gray-300 hover:text-blue-400 transition-colors">
+                <Link href="/admin/users" className="font-semibold text-blue-400 hover:text-blue-500 transition-colors">
                   User Management
                 </Link>
               )}
-              <div className="w-px h-6 bg-gray-700"></div>
+              
               <span className="text-gray-400">
                 Welcome, {session.user?.name || 'User'}
               </span>
+
               <button
                 onClick={() => signOut({ callbackUrl: '/' })}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
+                className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md transition-colors"
               >
                 Sign Out
               </button>

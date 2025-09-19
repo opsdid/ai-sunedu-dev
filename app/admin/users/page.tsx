@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react'; // This line was missing
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 interface User {
@@ -22,14 +22,12 @@ export default function ViewUsersPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Redirect if not authenticated or not an admin
     if (status === 'unauthenticated') {
       router.push('/');
     } else if (status === 'authenticated' && (session.user as any)?.role !== 'admin') {
-      router.push('/'); // Or a dedicated "access-denied" page
+      router.push('/');
     }
 
-    // Fetch users if authenticated as an admin
     if (status === 'authenticated' && (session.user as any)?.role === 'admin') {
       const fetchUsers = async () => {
         try {
@@ -45,7 +43,6 @@ export default function ViewUsersPage() {
           setLoading(false);
         }
       };
-
       fetchUsers();
     }
   }, [session, status, router]);
@@ -66,8 +63,12 @@ export default function ViewUsersPage() {
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
-        <Link href="/" className="text-blue-500 hover:underline">
-          &larr; Back to Home
+        {/* === THIS IS THE MISSING BUTTON === */}
+        <Link 
+          href="/admin/users/add" 
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition-colors"
+        >
+          + Add New User
         </Link>
       </div>
       <div className="overflow-x-auto bg-gray-800 shadow-md rounded-lg">

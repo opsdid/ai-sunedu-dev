@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { AuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import db from "@/lib/db";
@@ -9,11 +9,15 @@ interface DbUser extends RowDataPacket {
   id: number;
   username: string;
   password: string;
-  name: string;
   email: string;
+  firstname: string;
+  lastname: string;
+  roleid: number;
+  rolename: string;
 }
 
-const handler = NextAuth({
+// Export the auth configuration so it can be used in other API routes
+export const authOptions: AuthOptions = {
   session: {
     strategy: "jwt",
   },
@@ -25,53 +29,40 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        console.log("--- Authorize function started ---");
-        console.log("Credentials received:", credentials);
-
         if (!credentials?.username || !credentials?.password) {
-          console.log("Missing username or password");
           return null;
         }
 
         try {
+          // Query user and join with roles table to get the role name
           const [rows] = await db.query<DbUser[]>(
-            "SELECT * FROM users WHERE username = ?",
+            `SELECT u.*, r.name as rolename 
+             FROM users u 
+             JOIN roles r ON u.roleid = r.id 
+             WHERE u.username = ?`,
             [credentials.username]
           );
 
-          console.log("User found in DB:", rows[0] || "No user found");
-
-          // Check if a user was found in the database
           if (rows.length > 0) {
             const currentUser = rows[0];
-
-            // Compare the provided password with the hashed password from the database
             const passwordsMatch = await compare(
               credentials.password,
               currentUser.password
             );
-            
-            console.log("Password match result:", passwordsMatch);
 
             if (passwordsMatch) {
-              console.log("Authentication successful. Returning user.");
-              // Omit the password from the returned object for security
               return {
                 id: currentUser.id.toString(),
                 username: currentUser.username,
-                name: currentUser.name,
+                name: `${currentUser.firstname} ${currentUser.lastname}`,
                 email: currentUser.email,
+                role: currentUser.rolename,
               };
-            } else {
-              console.log("Passwords do not match.");
-              return null;
             }
-          } else {
-            console.log("User not found with that username.");
-            return null;
           }
+          return null;
         } catch (error) {
-          console.error("Error during database query or password comparison:", error);
+          console.error("Authorize error:", error);
           return null;
         }
       },
@@ -79,22 +70,25 @@ const handler = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      // The `user` object is only available on the first sign-in
       if (user) {
         token.id = user.id;
         token.username = (user as any).username;
+        token.role = (user as any).role;
       }
       return token;
     },
     async session({ session, token }) {
-      // Add the custom properties to the session object
       if (session.user) {
         session.user.id = token.id as string;
         session.user.username = token.username as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };
+

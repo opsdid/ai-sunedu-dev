@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react'; // This line was missing
 import Link from 'next/link';
 
 interface User {
@@ -17,77 +19,108 @@ export default function ViewUsersPage() {
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect if not authenticated or not an admin
     if (status === 'unauthenticated') {
       router.push('/');
-    }
-    
-    if (status === 'authenticated' && session?.user?.role !== 'admin') {
-       router.push('/'); // Or a dedicated 'unauthorized' page
+    } else if (status === 'authenticated' && (session.user as any)?.role !== 'admin') {
+      router.push('/'); // Or a dedicated "access-denied" page
     }
 
-    if (status === 'authenticated' && session?.user?.role === 'admin') {
-      fetch('/api/users')
-        .then(async (res) => {
+    // Fetch users if authenticated as an admin
+    if (status === 'authenticated' && (session.user as any)?.role === 'admin') {
+      const fetchUsers = async () => {
+        try {
+          const res = await fetch('/api/users');
           if (!res.ok) {
-            const data = await res.json();
-            throw new Error(data.message || 'Failed to fetch users');
+            throw new Error('Failed to fetch users. You may not have permission.');
           }
-          return res.json();
-        })
-        .then((data) => {
+          const data = await res.json();
           setUsers(data);
-          setLoading(false);
-        })
-        .catch((err) => {
+        } catch (err: any) {
           setError(err.message);
+        } finally {
           setLoading(false);
-        });
+        }
+      };
+
+      fetchUsers();
     }
   }, [session, status, router]);
 
   if (status === 'loading' || loading) {
-    return <div style={{ textAlign: 'center', marginTop: '50px', color: 'white' }}>Loading...</div>;
+    return <p className="text-center mt-10">Loading...</p>;
   }
-  
-  if (session?.user?.role !== 'admin') {
-    return <div style={{ textAlign: 'center', marginTop: '50px', color: 'red' }}>Access Denied.</div>;
+
+  if (error) {
+    return <p className="text-center mt-10 text-red-500">Error: {error}</p>;
+  }
+
+  if ((session?.user as any)?.role !== 'admin') {
+     return <p className="text-center mt-10">Access Denied</p>;
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: 'auto', padding: '20px', color: 'white' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1 style={{ fontSize: '2em' }}>User Management</h1>
-        <Link href="/" style={{ color: '#0070f3' }}>Back to Home</Link>
+    <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl sm:text-3xl font-bold">User Management</h1>
+        <Link href="/" className="text-blue-500 hover:underline">
+          &larr; Back to Home
+        </Link>
       </div>
-
-      {error && <p style={{ color: 'red' }}>{error}</p>}
-      
-      <table style={{ width: '100%', marginTop: '20px', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid #444' }}>
-            <th style={{ padding: '10px', textAlign: 'left' }}>ID</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Username</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Full Name</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Email</th>
-            <th style={{ padding: '10px', textAlign: 'left' }}>Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user.id} style={{ borderBottom: '1px solid #333' }}>
-              <td style={{ padding: '10px' }}>{user.id}</td>
-              <td style={{ padding: '10px' }}>{user.username}</td>
-              <td style={{ padding: '10px' }}>{`${user.firstname} ${user.lastname}`}</td>
-              <td style={{ padding: '10px' }}>{user.email}</td>
-              <td style={{ padding: '10px' }}>{user.rolename}</td>
+      <div className="overflow-x-auto bg-gray-800 shadow-md rounded-lg">
+        <table className="min-w-full leading-normal">
+          <thead>
+            <tr>
+              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                Username
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                Full Name
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-5 py-3 border-b-2 border-gray-700 text-left text-xs font-semibold text-gray-300 uppercase tracking-wider">
+                Role
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user.id} className="hover:bg-gray-700">
+                <td className="px-5 py-5 border-b border-gray-700 text-sm">
+                  <p className="text-gray-100 whitespace-no-wrap">{user.id}</p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-700 text-sm">
+                  <p className="text-gray-100 whitespace-no-wrap">{user.username}</p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-700 text-sm">
+                  <p className="text-gray-100 whitespace-no-wrap">{`${user.firstname} ${user.lastname}`}</p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-700 text-sm">
+                  <p className="text-gray-100 whitespace-no-wrap">{user.email}</p>
+                </td>
+                <td className="px-5 py-5 border-b border-gray-700 text-sm">
+                  <span
+                    className={`relative inline-block px-3 py-1 font-semibold leading-tight rounded-full ${
+                      user.rolename === 'admin' ? 'text-green-900 bg-green-200' : 'text-blue-900 bg-blue-200'
+                    }`}
+                  >
+                    <span aria-hidden className="absolute inset-0 opacity-50 rounded-full"></span>
+                    <span className="relative">{user.rolename}</span>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
